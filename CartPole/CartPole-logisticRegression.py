@@ -6,34 +6,27 @@ from sklearn.linear_model import LogisticRegression
 import pickle
 import os
 
-env = gym.make('CartPole-v0')
-env.reset()
-goal_steps = 200
+env = gym.make('CartPole-v1')
 score_requirement = 100
 initial_games = 10000
 
 
 def play(clf):
     scores = []
-    for episode in range(100):
+    for episode in range(5):
         score = 0
-        env.reset()
-        prev_observation = []
-        for t in range(goal_steps):
-            # env.render()
-            if t < 1:
-                action = env.action_space.sample()
-            else:
-                action = clf.predict(prev_observation)[0]
-
+        observation = env.reset()
+        done = False
+        while not done:
+            env.render()
+            action = clf.predict(observation.reshape(1, -1))[0]
             observation, reward, done, info = env.step(action)
             score += reward
-            prev_observation = observation.reshape(1, -1)
             if done:
                 break
         scores.append(score)
         print('Average reward: ', mean(scores))
-        if mean(scores) > 195:
+        if mean(scores) >= 475:
             print('Goal achieved at episode: ', episode)
             break
 
@@ -46,14 +39,12 @@ def initial_population():
     for _ in range(initial_games):
         score = 0
         game_memory = []
-        prev_observation = []
-        for _ in range(goal_steps):
-            action = random.randrange(0, 2)
+        prev_observation = env.reset()
+        done = False
+        while not done:
+            action = env.action_space.sample()
             observation, reward, done, info = env.step(action)
-
-            if len(prev_observation) > 0:
-                game_memory.append([prev_observation, action])
-
+            game_memory.append([prev_observation, action])
             prev_observation = observation
             score += reward
 
